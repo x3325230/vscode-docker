@@ -129,7 +129,9 @@
         "onView:dockerRegistries",
         "onView:dockerVolumes",
         "onView:vscode-docker.views.dockerContexts",
-        "onView:vscode-docker.views.help"
+        "onView:vscode-docker.views.help",
+        "onAuthenticationRequest:vscode-docker.dockerHub",
+        "onWalkthrough:dockerStart"
     ],
     "main": "main",
     "contributes": {
@@ -2992,6 +2994,12 @@
                         }
                     }
                 ]
+            }
+        ],
+        "authentication": [
+            {
+                "id": "vscode-docker.dockerHub",
+                "label": "Docker Hub"
             }
         ]
     },

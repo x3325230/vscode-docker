@@ -11,6 +11,7 @@ import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, createAzExtOutputChannel, createExperimentationService, IActionContext, registerErrorHandler, registerEvent, registerReportIssueCommand, registerUIExtensionVariables, UserCancelledError } from 'vscode-azureextensionui';
 import { ConfigurationParams, DidChangeConfigurationNotification, DocumentSelector, LanguageClient, LanguageClientOptions, Middleware, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import * as tas from 'vscode-tas-client';
+import { DockerHubAuthenticationProvider } from './auth/DockerHubAuthenticationProvider';
 import { registerCommands } from './commands/registerCommands';
 import { extensionVersion } from './constants';
 import { registerDebugProvider } from './debugging/DebugHelper';
@@ -18,6 +19,7 @@ import { DockerContextManager } from './docker/ContextManager';
 import { ContainerFilesProvider } from './docker/files/ContainerFilesProvider';
 import { DockerfileCompletionItemProvider } from './dockerfileCompletionItemProvider';
 import { ext } from './extensionVariables';
+import { localize } from './localize';
 import { registerTaskProviders } from './tasks/TaskHelper';
 import { ActivityMeasurementService } from './telemetry/ActivityMeasurementService';
 import { registerListeners } from './telemetry/registerListeners';
@@ -104,6 +106,17 @@ export async function activateInternal(ctx: vscode.ExtensionContext, perfStats: 
                     isCaseSensitive: true,
                     isReadonly: false
                 })
+        );
+
+        ctx.subscriptions.push(
+            vscode.authentication.registerAuthenticationProvider(
+                'vscode-docker.dockerHub',
+                localize('vscode-docker.dockerHubAuthProvider.label', 'Docker Hub'),
+                new DockerHubAuthenticationProvider(),
+                {
+                    supportsMultipleAccounts: true, // TODO
+                }
+            )
         );
 
         registerTrees();
