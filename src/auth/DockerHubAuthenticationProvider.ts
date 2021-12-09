@@ -4,13 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { localize } from '../localize';
+import { DockerHubAccountTreeItem } from '../tree/registries/dockerHub/DockerHubAccountTreeItem';
+import { DockerHubAuthScope } from './DockerHubAuthScopes';
 
 interface DockerHubToken {
     /* eslint-disable @typescript-eslint/naming-convention */
     session_id: string;
     username: string;
     user_id: string;
+    scope: DockerHubAuthScope;
     /* eslint-enable @typescript-eslint/naming-convention */
     // Other properties exist but they are not used
 }
@@ -22,18 +24,10 @@ export class DockerHubAuthenticationProvider implements vscode.AuthenticationPro
     public readonly onDidChangeSessions = this.sessionChangeEmitter.event;
 
     public async getSessions(scopes?: readonly string[]): Promise<readonly vscode.AuthenticationSession[]> {
-        if (scopes?.length) {
-            throw new Error(localize('vscode-docker.dockerHubAuthProvider.noScopesGet', 'Scopes are not supported by the DockerHubAuthenticationProvider.'));
-        }
-
-        return Array.from(this.sessions.values());
+        throw new Error('Method not implemented.');
     }
 
     public async createSession(scopes: readonly string[]): Promise<vscode.AuthenticationSession> {
-        if (scopes.length) {
-            throw new Error(localize('vscode-docker.dockerHubAuthProvider.noScopesCreate', 'Scopes are not supported by the DockerHubAuthenticationProvider.'));
-        }
-
         throw new Error('Method not implemented.');
     }
 
@@ -48,6 +42,10 @@ export class DockerHubAuthenticationProvider implements vscode.AuthenticationPro
                 }
             );
         }
+    }
+
+    private async chooseAccount(): Promise<DockerHubAccountTreeItem> {
+        throw new Error('Method not implemented.');
     }
 
     private async acquireToken(username: string, password: string): Promise<string> {
