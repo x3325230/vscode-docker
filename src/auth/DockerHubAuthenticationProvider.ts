@@ -6,6 +6,7 @@
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { localize } from '../localize';
 import { DockerHubAccountTreeItem } from '../tree/registries/dockerHub/DockerHubAccountTreeItem';
 import { registryExpectedContextValues } from '../tree/registries/registryContextValues';
 import { ErrorHandling, httpRequest, RequestOptionsLike } from '../utils/httpRequest';
@@ -50,11 +51,13 @@ export class DockerHubAuthenticationProvider implements vscode.AuthenticationPro
      * @param scopes The desired scope(s)
      */
     public async createSession(scopes: readonly string[]): Promise<vscode.AuthenticationSession> {
+        const desiredScopes = scopes as DockerHubAuthScope[];
+
         const account = await this.chooseAccount();
         const token = await this.acquireToken(account.username, await account.getPassword());
-        const parsedToken = await this.parseToken(token);
+        const parsedToken = this.parseToken(token);
 
-        if (!scopesAreMet(scopes as DockerHubAuthScope[], [parsedToken.scope])) {
+        if (!scopesAreMet(desiredScopes, [parsedToken.scope])) {
             throw new Error('Unable to obtain token with desired scope(s).');
         }
 
@@ -96,9 +99,17 @@ export class DockerHubAuthenticationProvider implements vscode.AuthenticationPro
     private async chooseAccount(): Promise<DockerHubAccountTreeItem> {
         return await callWithTelemetryAndErrorHandling('pickDockerHub', async (context: IActionContext) => {
             context.telemetry.suppressAll = true;
-            context.errorHandling.suppressDisplay = true;
+            context.errorHandling.suppressReportIssue = true;
 
-            return await ext.registriesTree.showTreeItemPicker<DockerHubAccountTreeItem>(registryExpectedContextValues.dockerHub.registry, context);
+            return await ext.registriesTree.showTreeItemPicker<DockerHubAccountTreeItem>(
+                registryExpectedContextValues.dockerHub.registry,
+                {
+                    ...context,
+                    suppressCreatePick: true,
+                    canPickMany: false,
+                    noItemFoundErrorMessage: localize('vscode-docker.auth.dockerHub.noDockerHubConnection', 'No Docker Hub connection found. Add a connection with the command "Docker Registries: Connect Registry..." and choose Docker Hub.'),
+                }
+            );
         });
     }
 
@@ -116,7 +127,7 @@ export class DockerHubAuthenticationProvider implements vscode.AuthenticationPro
         return (await response.json()).token;
     }
 
-    private async parseToken(token: string): Promise<DockerHubToken> {
+    private parseToken(token: string): DockerHubToken {
         const parsedToken = JSON.parse(token) as DockerHubToken;
 
         if (!parsedToken.session_id ||
